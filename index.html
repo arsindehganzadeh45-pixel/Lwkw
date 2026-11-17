@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VEXR | پنل مدیریت پیشرفته WireGuard</title>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-dark: #060913;
+      --bg-navy: #0b132b;
+      --bg-card: rgba(16, 24, 48, 0.75);
+      --border-glass: rgba(99, 102, 241, 0.28);
+      --neon-blue: #38bdf8;
+      --neon-purple: #8b5cf6;
+      --neon-indigo: #6366f1;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top right, #172554, #090d16 55%, #05070e 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--neon-indigo); }
+
+    #auth-wrapper, #sub-viewer-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at center, #0f1c3f 0%, #070b19 100%);
+    }
+
+    .login-card {
+      background: #ffffff;
+      color: #0f172a;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px;
+      padding: 36px 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      animation: fadeUp 0.45s ease;
+    }
+
+    .shield-box {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0b2545 0%, #0284c7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.35);
+    }
+
+    .login-title { font-size: 26px; font-weight: 900; letter-spacing: 1px; color: #0f172a; margin-bottom: 6px; }
+    .login-subtitle { font-size: 13.5px; color: #64748b; margin-bottom: 26px; }
+
+    .form-group-light { text-align: right; margin-bottom: 18px; }
+    .form-group-light label { display: block; font-size: 13.5px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .form-group-light input {
+      width: 100%; padding: 13px 15px; border-radius: 12px; border: 1.5px solid #cbd5e1;
+      background: #f8fafc; color: #0f172a; font-size: 14px; outline: none; transition: 0.2s; direction: ltr; text-align: left;
+    }
+    .form-group-light input:focus { border-color: #1d4ed8; background: #fff; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15); }
+
+    .btn-login-submit {
+      width: 100%; padding: 14px; border: none; border-radius: 12px; background: #0d2149;
+      color: #ffffff; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: 0.25s;
+    }
+    .btn-login-submit:hover { background: #153470; transform: translateY(-1px); }
+
+    #app-wrapper { display: none; min-height: 100vh; }
+
+    .sidebar {
+      width: 265px; background: rgba(9, 14, 28, 0.94); backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-glass); position: fixed; top: 0; right: 0; bottom: 0;
+      z-index: 100; display: flex; flex-direction: column; transition: transform 0.3s ease;
+    }
+
+    .brand-header { padding: 22px 20px; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; gap: 12px; }
+    .brand-logo-mini {
+      width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--neon-indigo), var(--neon-blue));
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+    .brand-name {
+      font-size: 22px; font-weight: 900; background: linear-gradient(90deg, #fff, var(--neon-blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px;
+    }
+
+    .nav-menu { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px;
+      color: var(--text-muted); cursor: pointer; margin-bottom: 6px; font-size: 14px; font-weight: 500;
+      transition: all 0.25s ease; border: 1px solid transparent;
+    }
+    .nav-item:hover { background: rgba(99, 102, 241, 0.12); color: #fff; }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.1));
+      color: #fff; border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    .main-content { margin-right: 265px; padding: 20px 28px; transition: margin 0.3s ease; }
+
+    .topbar {
+      background: var(--bg-card); backdrop-filter: blur(14px); border: 1px solid var(--border-glass);
+      border-radius: 16px; padding: 14px 22px; display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 14px; margin-bottom: 24px;
+    }
+
+    .search-global { position: relative; flex: 1; max-width: 340px; min-width: 200px; }
+    .search-global input {
+      width: 100%; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px; padding: 9px 14px; color: #fff; font-size: 13px; outline: none;
+    }
+    .search-global input:focus { border-color: var(--neon-blue); box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); }
+
+    .topbar-meta { display: flex; align-items: center; gap: 14px; font-size: 12.5px; color: var(--text-muted); }
+    .badge-pill {
+      background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--neon-blue); padding: 5px 12px; border-radius: 99px; font-weight: 600;
+    }
+
+    .glass-card {
+      background: var(--bg-card); backdrop-filter: blur(14px); border: 1px solid var(--border-glass);
+      border-radius: 18px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 22px; }
+    .stat-box {
+      background: linear-gradient(145deg, rgba(17, 26, 54, 0.85), rgba(10, 15, 32, 0.9));
+      border: 1px solid var(--border-glass); border-radius: 16px; padding: 18px; position: relative; overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-box:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.22); border-color: var(--neon-blue); }
+    .stat-label { font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; }
+    .stat-value { font-size: 22px; font-weight: 800; color: #fff; }
+    .stat-sub { font-size: 11.5px; color: var(--neon-blue); margin-top: 6px; }
+
+    .btn {
+      padding: 9px 16px; border-radius: 10px; border: 1px solid transparent; font-size: 13px; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--neon-indigo), #2563eb); color: #fff; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35); }
+    .btn-primary:hover { filter: brightness(1.12); }
+    .btn-neon { background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.4); color: var(--neon-blue); }
+    .btn-neon:hover { background: rgba(56, 189, 248, 0.25); }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
+    .btn-success { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+
+    .input-dark, .select-dark, .textarea-dark {
+      width: 100%; background: rgba(9, 13, 26, 0.85); border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px; padding: 10px 13px; color: #fff; font-size: 13px; outline: none;
+    }
+    .input-dark:focus, .select-dark:focus, .textarea-dark:focus {
+      border-color: var(--neon-purple); box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 12px 14px; text-align: right; border-bottom: 1px solid rgba(148, 163, 184, 0.12); }
+    th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
+    tr:hover td { background: rgba(99, 102, 241, 0.06); }
+
+    .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; display: inline-block; }
+    .status-active { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-disabled { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+    .status-expired { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(3, 6, 16, 0.8); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px;
+    }
+    .modal-box {
+      background: #0d152c; border: 1px solid var(--neon-indigo); border-radius: 20px;
+      width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); animation: fadeUp 0.25s ease;
+    }
+
+    #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: #111b36; border-right: 4px solid var(--neon-blue); color: #fff;
+      padding: 12px 18px; border-radius: 10px; font-size: 13px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: fadeUp 0.25s ease;
+    }
+
+    .section-view { display: none; }
+    .section-view.active { display: block; animation: fadeUp 0.3s ease; }
+    .mobile-menu-btn { display: none; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-right: 0; padding: 14px; }
+      .mobile-menu-btn { display: inline-flex; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- AUTH / LOGIN SCREEN -->
+  <div id="auth-wrapper">
+    <div class="login-card">
+      <div class="shield-box">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v8M8 12h8" stroke="#38bdf8" stroke-width="1.8"/>
+        </svg>
+      </div>
+      <div class="login-title">VEXR</div>
+      <div class="login-subtitle">ورود یکپارچه مالک و ادمین‌های سیستم</div>
+      <form id="login-form">
+        <div class="form-group-light">
+          <label for="login-user">نام کاربری</label>
+          <input type="text" id="login-user" required autocomplete="username" />
+        </div>
+        <div class="form-group-light">
+          <label for="login-pass">رمز عبور</label>
+          <input type="password" id="login-pass" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-login-submit">ورود به پنل</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LUXURY SUBSCRIPTION PUBLIC VIEWER -->
+  <div id="sub-viewer-wrapper" style="display:none;">
+    <div class="login-card" style="max-width: 520px; background: rgba(11, 19, 43, 0.95); color: #fff; border: 1px solid var(--neon-indigo);">
+      <div class="shield-box">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="login-title" style="color:#fff;">VEXR</div>
+      <div class="login-subtitle" id="sub-view-subtitle" style="color:var(--neon-blue);">اشتراک اختصاصی WireGuard</div>
+
+      <div id="sub-password-gate" style="display:none; margin-top:20px;">
+        <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px;">🔒 این لینک اشتراک با رمز عبور محافظت شده است.</p>
+        <div class="form-group-light" style="text-align:right;">
+          <label style="color:#cbd5e1;">رمز عبور لینک اشتراک</label>
+          <input type="password" id="sub-unlock-pass" placeholder="رمز را وارد کنید..." style="background:#090d16; color:#fff; border-color:var(--border-glass);" />
+        </div>
+        <button class="btn-login-submit" style="background:linear-gradient(135deg,var(--neon-indigo),#2563eb);" onclick="unlockSubscription()">باز کردن اشتراک</button>
+      </div>
+
+      <div id="sub-unlocked-content" style="display:none; text-align:right;">
+        <div id="sub-info-banner" style="background:rgba(56, 189, 248, 0.1); border:1px solid rgba(56, 189, 248, 0.3); padding:14px; border-radius:14px; font-size:13px; margin-bottom:16px; color:#e2e8f0; line-height:1.6;"></div>
+        <div id="sub-configs-list" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION PANEL -->
+  <div id="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-header">
+        <div class="brand-logo-mini">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">VEXR</div>
+          <div style="font-size:11px; color:var(--neon-blue);">WireGuard Core</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">📊 داشبورد و آمار</div>
+        <div class="nav-item" onclick="switchTab('configs', this)">🔐 مدیریت کانفیگ‌ها</div>
+        <div class="nav-item" onclick="switchTab('subs', this)">🔗 سیستم لینک ساب VEXR</div>
+        <div class="nav-item" onclick="switchTab('servers', this)">🌐 مدیریت سرورها</div>
+        <div class="nav-item" onclick="switchTab('admins', this)">🛡️ مدیریت ادمین‌ها</div>
+        <div class="nav-item" onclick="switchTab('logs', this)">📜 تاریخچه و اعلان‌ها</div>
+        <div class="nav-item" onclick="switchTab('settings', this)">⚙️ تنظیمات اختصاصی VEXR</div>
+        <div class="nav-item" onclick="switchTab('about', this)">💎 درباره برند VEXR</div>
+      </nav>
+
+      <div style="padding:16px; border-top:1px solid var(--border-glass);">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          کاربر: <strong id="current-user-display" style="color:#fff;">-</strong>
+        </div>
+        <button class="btn btn-danger" style="width:100%; justify-content:center;" onclick="logout()">خروج از حساب</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn btn-neon mobile-menu-btn" onclick="toggleSidebar()">☰ منو</button>
+          <span style="font-weight:800; font-size:16px; color:var(--neon-blue);">VEXR</span>
+        </div>
+
+        <div class="search-global">
+          <input type="text" id="global-search-input" placeholder="جستجوی سراسری در کانفیگ‌ها و سرورها..." oninput="handleGlobalSearch(this.value)" />
+        </div>
+
+        <div class="topbar-meta">
+          <span id="persian-date-display" class="badge-pill">تاریخ</span>
+          <span id="live-clock-display" class="badge-pill" style="direction:ltr;">00:00:00</span>
+          <button class="btn btn-primary btn-sm" onclick="openCreateConfigModal()">+ ساخت کانفیگ جدید</button>
+        </div>
+      </header>
+
+      <div id="global-search-results" class="glass-card" style="display:none; border-color:var(--neon-blue);"></div>
+
+      <!-- DASHBOARD -->
+      <section id="sec-dashboard" class="section-view active">
+        <div class="stats-grid" id="dashboard-stats-grid"></div>
+
+        <div class="grid-2">
+          <div class="glass-card">
+            <h3 style="font-size:15px; margin-bottom:14px; color:var(--neon-blue);">📊 نمودار مصرف و حجم کل (GB)</h3>
+            <canvas id="trafficChart" height="170"></canvas>
+          </div>
+          <div class="glass-card">
+            <h3 style="font-size:15px; margin-bottom:14px; color:var(--neon-purple);">📈 وضعیت کانفیگ‌های سیستم</h3>
+            <canvas id="configsStatusChart" height="170"></canvas>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="glass-card">
+            <h3 style="font-size:15px; margin-bottom:12px;">🌐 وضعیت سرورهای ثبت‌شده</h3>
+            <div id="dash-servers-list"></div>
+          </div>
+          <div class="glass-card">
+            <h3 style="font-size:15px; margin-bottom:12px;">⚡ آخرین کانفیگ‌های ایجاد‌شده</h3>
+            <div id="dash-recent-configs"></div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3 style="font-size:15px; margin-bottom:12px;">🕒 آخرین فعالیت‌های ثبت‌شده</h3>
+          <div id="dash-recent-logs"></div>
+        </div>
+      </section>
+
+      <!-- CONFIGS -->
+      <section id="sec-configs" class="section-view">
+        <div class="glass-card">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
+            <h2 style="font-size:17px;">🔐 مدیریت پیشرفته کانفیگ‌های VEXR</h2>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="openCreateConfigModal()">+ کانفیگ جدید</button>
+              <button class="btn btn-neon btn-sm" onclick="exportConfigsCSV()">📥 خروجی CSV جدول</button>
+              <button class="btn btn-success btn-sm" onclick="bulkAction('activate')">فعال‌سازی گروهی</button>
+              <button class="btn btn-danger btn-sm" onclick="bulkAction('delete')">حذف گروهی</button>
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-bottom:16px;">
+            <input type="text" class="input-dark" id="cfg-search" placeholder="جستجوی نام یا کلید کانفیگ..." oninput="renderConfigsTable()" />
+            <select class="select-dark" id="cfg-filter-country" onchange="renderConfigsTable()">
+              <option value="all">همه کشورها</option>
+            </select>
+            <select class="select-dark" id="cfg-filter-status" onchange="renderConfigsTable()">
+              <option value="all">همه وضعیت‌ها</option>
+              <option value="active">فعال</option>
+              <option value="disabled">غیرفعال</option>
+              <option value="expired">منقضی‌شده</option>
+            </select>
+            <select class="select-dark" id="cfg-sort" onchange="renderConfigsTable()">
+              <option value="newest">مرتب‌سازی: جدیدترین ساخت</option>
+              <option value="oldest">مرتب‌سازی: قدیمی‌ترین ساخت</option>
+              <option value="volume_desc">بیشترین حجم کل</option>
+              <option value="remaining_desc">بیشترین زمان باقی‌مانده</option>
+            </select>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="select-all-cfgs" onchange="toggleSelectAllConfigs(this)" /></th>
+                  <th>نام کاربر / کانفیگ</th>
+                  <th>سرور / کشور</th>
+                  <th>حجم (کل / مصرف / باقی)</th>
+                  <th>تاریخ ایجاد و انقضا</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="configs-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUBSCRIPTIONS -->
+      <section id="sec-subs" class="section-view">
+        <div class="glass-card">
+          <h2 style="font-size:17px; margin-bottom:14px;">🔗 سیستم لینک ساب پیشرفته VEXR</h2>
+          <div class="grid-2">
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">عنوان لینک اشتراک</label>
+              <input type="text" class="input-dark" id="sub-title" placeholder="مثلاً: اشتراک ویژه گیمینگ VIP" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">نوع انتخاب کانفیگ‌ها</label>
+              <select class="select-dark" id="sub-mode" onchange="toggleSubUserSelector()">
+                <option value="single">لینک اختصاصی برای یک کاربر</option>
+                <option value="selected">لینک گروهی (کاربران انتخاب‌شده)</option>
+                <option value="all_active">لینک گروهی برای تمام کاربران فعال</option>
+              </select>
+            </div>
+            <div id="sub-single-user-box">
+              <label style="font-size:12.5px; color:var(--text-muted);">انتخاب کاربر</label>
+              <select class="select-dark" id="sub-single-user"></select>
+            </div>
+            <div id="sub-multi-user-box" style="display:none;">
+              <label style="font-size:12.5px; color:var(--text-muted);">انتخاب کاربران (کلید Ctrl را نگه دارید)</label>
+              <select class="select-dark" id="sub-multi-users" multiple style="height:90px;"></select>
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">مدت اعتبار لینک (روز)</label>
+              <input type="number" class="input-dark" id="sub-days" value="30" min="1" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">رمز عبور لینک ساب (اختیاری)</label>
+              <input type="password" class="input-dark" id="sub-password" placeholder="در صورت خالی بودن بدون رمز ساخته می‌شود" />
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="createSubscriptionLink()">✨ تولید و ثبت لینک ساب VEXR</button>
+        </div>
+
+        <div class="glass-card">
+          <h3 style="font-size:16px; margin-bottom:14px;">📋 لیست لینک‌های ساب ساخته‌شده</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>عنوان لینک</th>
+                  <th>تعداد کانفیگ</th>
+                  <th>محافظت رمز</th>
+                  <th>ساخت / انقضا</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="subs-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVERS -->
+      <section id="sec-servers" class="section-view">
+        <div class="glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h2 style="font-size:17px;">🌐 مدیریت سرورهای WireGuard</h2>
+            <button class="btn btn-primary btn-sm" onclick="openServerModal()">+ افزودن سرور جدید</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>نام / دسته‌بندی</th>
+                  <th>کشور</th>
+                  <th>IP : Port</th>
+                  <th>ظرفیت / کانفیگ‌ها</th>
+                  <th>پیش‌فرض</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="servers-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMINS -->
+      <section id="sec-admins" class="section-view">
+        <div class="glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h2 style="font-size:17px;">🛡️ مدیریت ادمین‌ها و سطوح دسترسی</h2>
+            <button class="btn btn-primary btn-sm" onclick="openAdminModal()">+ افزودن ادمین جدید</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>نام نمایشی</th>
+                  <th>نام کاربری</th>
+                  <th>سطح دسترسی</th>
+                  <th>کانفیگ‌های ساخته‌شده</th>
+                  <th>انقضا</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="admins-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGS -->
+      <section id="sec-logs" class="section-view">
+        <div class="glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h2 style="font-size:17px;">📜 تاریخچه تغییرات و فعالیت‌های سیستم</h2>
+            <button class="btn btn-danger btn-sm" onclick="clearLogs()">پاک‌سازی تاریخچه</button>
+          </div>
+          <div id="full-logs-list"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="sec-settings" class="section-view">
+        <div class="glass-card">
+          <h2 style="font-size:17px; margin-bottom:16px;">⚙️ تنظیمات اختصاصی VEXR</h2>
+          <div class="grid-2">
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">نام برند (ثابت)</label>
+              <input type="text" class="input-dark" value="VEXR" disabled />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">رمز اصلی مالک پنل (ثابت)</label>
+              <input type="text" class="input-dark" value="AVEXR" disabled />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">DNS پیش‌فرض کانفیگ‌ها</label>
+              <input type="text" class="input-dark" id="set-dns" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">مقدار MTU پیش‌فرض</label>
+              <input type="number" class="input-dark" id="set-mtu" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">حجم پیش‌فرض کاربر جدید (GB)</label>
+              <input type="number" class="input-dark" id="set-def-gb" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">مدت اعتبار پیش‌فرض (روز)</label>
+              <input type="number" class="input-dark" id="set-def-days" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">رنج IP داخلی کلاینت (Subnet)</label>
+              <input type="text" class="input-dark" id="set-subnet" />
+            </div>
+            <div>
+              <label style="font-size:12.5px; color:var(--text-muted);">AllowedIPs پیش‌فرض</label>
+              <input type="text" class="input-dark" id="set-allowed-ips" />
+            </div>
+          </div>
+          <div style="margin-top:18px; display:flex; flex-wrap:wrap; gap:10px;">
+            <button class="btn btn-primary" onclick="saveSettings()">💾 ذخیره تنظیمات</button>
+            <button class="btn btn-neon" onclick="exportBackupJSON()">📤 خروجی پشتیبان (JSON)</button>
+            <label class="btn btn-success" style="cursor:pointer;">
+              📥 بازیابی نسخه پشتیبان (JSON)
+              <input type="file" accept=".json" style="display:none;" onchange="importBackupJSON(event)" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="sec-about" class="section-view">
+        <div class="glass-card" style="text-align:center; padding:36px 20px;">
+          <div class="shield-box" style="margin-bottom:16px;">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h1 style="font-size:28px; font-weight:900; color:#fff; letter-spacing:2px;">VEXR</h1>
+          <p style="color:var(--neon-blue); font-size:14px; margin:8px 0 18px;">نسل جدید پنل مدیریت زیرساخت و اشتراک‌های WireGuard</p>
+          <p style="max-width:620px; margin:0 auto; font-size:13.5px; color:var(--text-muted); line-height:1.8;">
+            سامانه مدیریتی <strong>VEXR</strong> برای مدیریت متمرکز کانفیگ‌های WireGuard، تولید لینک‌های اشتراک رمزنگاری‌شده، مدیریت ادمین‌ها و کنترل دقیق حجم و اعتبار کاربران طراحی شده است.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="universal-modal">
+    <div class="modal-box" id="modal-content-box"></div>
+  </div>
+
+  <script>
+    const BRAND_NAME = "VEXR";
+    const OWNER_PASS = "AVEXR";
+    const STORAGE_KEY = "VEXR_PANEL_STATE_V3";
+
+    const defaultState = {
+      settings: {
+        dns: "1.1.1.1,8.8.8.8",
+        mtu: 1300,
+        defaultGB: 30000,
+        defaultDays: 30,
+        subnet: "10.8.11.",
+        allowedIPs: "0.0.0.0/0"
+      },
+      servers: [
+        {
+          id: "srv_stone_gaming",
+          name: "سرور گیم و وبگردی سنگین",
+          category: "گیمینگ و وبگردی",
+          country: "ترکیه 🇹🇷",
+          ip: "tr5.stonecoldstunner.ir",
+          port: 7331,
+          publicKey: "NDsx134OKWK9888roXmfD8vGr8tzqvOOGj/uimNgGVo=",
+          capacityGB: 30000,
+          active: true,
+          isDefault: true
+        }
+      ],
+      admins: [
+        {
+          id: "adm_owner",
+          name: "سبحان",
+          username: "admin",
+          password: OWNER_PASS,
+          role: "owner",
+          active: true,
+          expiresAt: null
+        }
+      ],
+      configs: [
+        {
+          id: "cfg_default_gaming",
+          name: "Sobhan_Gaming_VIP",
+          serverId: "srv_stone_gaming",
+          clientIP: "10.8.11.170",
+          privateKey: "CJgbIP8Ch1LaRbUF113lUMac71A5HO4guNmz27Qb6Hg=",
+          publicKey: "NDsx134OKWK9888roXmfD8vGr8tzqvOOGj/uimNgGVo=",
+          totalGB: 30000,
+          usedGB: 0,
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30*86400000).toISOString(),
+          active: true,
+          createdBy: "admin"
+        }
+      ],
+      subscriptions: [],
+      logs: []
+    };
+
+    let state = loadState();
+    let currentUser = null;
+    let charts = { traffic: null, status: null };
+    let pendingSubData = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState));
+          return JSON.parse(JSON.stringify(defaultState));
+        }
+        const parsed = JSON.parse(raw);
+        if (parsed.admins) {
+          const owner = parsed.admins.find(a => a.role === 'owner');
+          if (owner) owner.password = OWNER_PASS;
+        }
+        return { ...defaultState, ...parsed };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(defaultState));
+      }
+    }
+
+    function saveState() {
+      const owner = state.admins.find(a => a.role === 'owner');
+      if (owner) owner.password = OWNER_PASS;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function addLog(action, detail) {
+      state.logs.unshift({
+        id: "log_" + Date.now(),
+        time: new Date().toLocaleString('fa-IR'),
+        actor: currentUser ? currentUser.name : "سیستم",
+        action,
+        detail
+      });
+      if (state.logs.length > 100) state.logs.pop();
+      saveState();
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toast-container");
+      const el = document.createElement("div");
+      el.className = "toast";
+      if (type === "error") el.style.borderRightColor = "#ef4444";
+      if (type === "success") el.style.borderRightColor = "#10b981";
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function generateWGKey() {
+      const arr = new Uint8Array(32);
+      crypto.getRandomValues(arr);
+      let bin = "";
+      arr.forEach(b => bin += String.fromCharCode(b));
+      return btoa(bin);
+    }
+
+    async function sha256Hex(str) {
+      const buf = new TextEncoder().encode(str);
+      const hash = await crypto.subtle.digest("SHA-256", buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function encodeUTF8Base64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    function decodeUTF8Base64(b64) {
+      return decodeURIComponent(escape(atob(b64)));
+    }
+
+    function buildConfText(cfg) {
+      const srv = state.servers.find(s => s.id === cfg.serverId) || state.servers[0];
+      const endpoint = srv ? `${srv.ip}:${srv.port}` : "tr5.stonecoldstunner.ir:7331";
+      const pubKey = srv ? srv.publicKey : "NDsx134OKWK9888roXmfD8vGr8tzqvOOGj/uimNgGVo=";
+      return `[Interface]
+PrivateKey = ${cfg.privateKey}
+Address = ${cfg.clientIP}/32
+MTU = ${state.settings.mtu}
+DNS = ${state.settings.dns}
+
+[Peer]
+PublicKey = ${pubKey}
+Endpoint = ${endpoint}
+AllowedIPs = ${state.settings.allowedIPs}
+PersistentKeepalive = 25`;
+    }
+
+    function downloadConfFile(filename, confText) {
+      const cleanName = filename.endsWith('.conf') ? filename : `${filename}.conf`;
+      const blob = new Blob([confText], { type: "application/x-wireguard;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = cleanName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadJSONFile(filename, jsonText) {
+      const blob = new Blob([jsonText], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadCSVFile(filename, csvText) {
+      const blob = new Blob(["\uFEFF" + csvText], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      startClock();
+      const params = new URLSearchParams(window.location.search);
+      const subPayload = params.get("sub");
+
+      if (subPayload) {
+        initSubViewer(subPayload);
+        return;
+      }
+
+      const savedSession = sessionStorage.getItem("VEXR_SESSION");
+      if (savedSession) {
+        try {
+          currentUser = JSON.parse(savedSession);
+          enterPanel();
+        } catch (e) {}
+      }
+    });
+
+    document.getElementById("login-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = document.getElementById("login-user").value.trim();
+      const pass = document.getElementById("login-pass").value;
+
+      if (!user || !pass) {
+        showToast("نام کاربری و رمز عبور الزامی است.", "error");
+        return;
+      }
+
+      const matchedAdmin = state.admins.find(a => a.username.toLowerCase() === user.toLowerCase());
+
+      if (matchedAdmin) {
+        if (!matchedAdmin.active) {
+          showToast("حساب این ادمین غیرفعال شده است.", "error");
+          return;
+        }
+        const expectedPass = matchedAdmin.role === "owner" ? OWNER_PASS : matchedAdmin.password;
+        if (pass === expectedPass) {
+          currentUser = matchedAdmin;
+          sessionStorage.setItem("VEXR_SESSION", JSON.stringify(currentUser));
+          addLog("ورود به پنل", `ورود موفق توسط ${currentUser.name}`);
+          enterPanel();
+          return;
+        }
+      } else if (pass === OWNER_PASS) {
+        currentUser = { id: "adm_owner", name: user, username: user, role: "owner" };
+        sessionStorage.setItem("VEXR_SESSION", JSON.stringify(currentUser));
+        addLog("ورود مالک", `ورود مالک با نام کاربری ${user}`);
+        enterPanel();
+        return;
+      }
+
+      showToast("نام کاربری یا رمز عبور اشتباه است.", "error");
+    });
+
+    function enterPanel() {
+      document.getElementById("auth-wrapper").style.display = "none";
+      document.getElementById("app-wrapper").style.display = "block";
+      document.getElementById("current-user-display").textContent = currentUser.name;
+      loadSettingsInputs();
+      refreshAllUI();
+      showToast(`خوش آمدید به پنل ${BRAND_NAME}`, "success");
+    }
+
+    function logout() {
+      sessionStorage.removeItem("VEXR_SESSION");
+      currentUser = null;
+      document.getElementById("app-wrapper").style.display = "none";
+      document.getElementById("auth-wrapper").style.display = "flex";
+      document.getElementById("login-pass").value = "";
+    }
+
+    function initSubViewer(encoded) {
+      document.getElementById("auth-wrapper").style.display = "none";
+      document.getElementById("sub-viewer-wrapper").style.display = "flex";
+      try {
+        const jsonStr = decodeUTF8Base64(encoded);
+        pendingSubData = JSON.parse(jsonStr);
+        document.getElementById("sub-view-subtitle").textContent = pendingSubData.title || "اشتراک VEXR WireGuard";
+
+        if (pendingSubData.pwdHash) {
+          document.getElementById("sub-password-gate").style.display = "block";
+        } else {
+          renderLuxurySubContent();
+        }
+      } catch (err) {
+        document.getElementById("sub-view-subtitle").textContent = "لینک اشتراک نامعتبر است.";
+      }
+    }
+
+    async function unlockSubscription() {
+      const inputPass = document.getElementById("sub-unlock-pass").value;
+      const hash = await sha256Hex(inputPass);
+      if (hash === pendingSubData.pwdHash) {
+        document.getElementById("sub-password-gate").style.display = "none";
+        renderLuxurySubContent();
+        showToast("اشتراک با موفقیت باز شد", "success");
+      } else {
+        showToast("رمز عبور اشتراک نادرست است!", "error");
+      }
+    }
+
+    function renderLuxurySubContent() {
+      const box = document.getElementById("sub-unlocked-content");
+      const list = document.getElementById("sub-configs-list");
+      const banner = document.getElementById("sub-info-banner");
+      box.style.display = "block";
+
+      const totalConfigs = pendingSubData.items.length;
+      const totalGB = pendingSubData.items.reduce((acc, i) => acc + Number(i.totalGB || 0), 0);
+      const expDate = pendingSubData.exp ? new Date(pendingSubData.exp).toLocaleDateString('fa-IR') : 'نامحدود';
+
+      banner.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>💎 نام برند:</span><strong>VEXR VIP</strong></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>📦 تعداد کانفیگ‌ها:</span><strong>${totalConfigs} عدد</strong></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>📊 حجم کل اختصاص‌یافته:</span><strong>${totalGB.toLocaleString()} GB</strong></div>
+        <div style="display:flex; justify-content:space-between;"><span>⏳ تاریخ انقضا:</span><strong style="color:#fbbf24;">${expDate}</strong></div>
+      `;
+
+      list.innerHTML = pendingSubData.items.map((item, idx) => `
+        <div style="border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:14px; background:rgba(9,14,28,0.85);">
+          <div style="font-weight:800; color:#38bdf8; margin-bottom:6px;">${idx + 1}. ${item.name} (${item.country})</div>
+          <div style="font-size:12px; color:#94a3b8; margin-bottom:10px;">حجم: ${item.totalGB.toLocaleString()} گیگابایت | وضعیت: فعال</div>
+          <div id="sub-qr-${idx}" style="background:#fff; padding:8px; border-radius:10px; width:fit-content; margin:0 auto 10px;"></div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(\`${item.conf.replace(/`/g, '\\`')}\`); showToast('کانفیگ کپی شد', 'success')">📋 کپی کانفیگ</button>
+            <button class="btn btn-neon btn-sm" onclick="downloadConfFile('${item.name}.conf', \`${item.conf.replace(/`/g, '\\`')}\`)">📥 دانلود فایل .CONF</button>
+          </div>
+        </div>
+      `).join("");
+
+      pendingSubData.items.forEach((item, idx) => {
+        new QRCode(document.getElementById(`sub-qr-${idx}`), { text: item.conf, width: 140, height: 140 });
+      });
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll(".section-view").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById("sec-" + tabId).classList.add("active");
+      if (el) el.classList.add("active");
+      document.getElementById("sidebar").classList.remove("open");
+      refreshAllUI();
+    }
+
+    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+
+    function startClock() {
+      const update = () => {
+        const now = new Date();
+        document.getElementById("persian-date-display").textContent = now.toLocaleDateString("fa-IR", { year: "numeric", month: "long", day: "numeric" });
+        document.getElementById("live-clock-display").textContent = now.toLocaleTimeString("fa-IR", { hour12: false });
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    function handleGlobalSearch(q) {
+      const box = document.getElementById("global-search-results");
+      q = q.trim().toLowerCase();
+      if (!q) { box.style.display = "none"; return; }
+      const matchedCfgs = state.configs.filter(c => c.name.toLowerCase().includes(q) || c.clientIP.includes(q));
+      box.style.display = "block";
+      box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <strong>نتایج جستجو برای «${q}»</strong>
+          <button class="btn btn-sm btn-danger" onclick="document.getElementById('global-search-results').style.display='none'">بستن</button>
+        </div>
+        <div style="font-size:13px; color:var(--text-muted);">کانفیگ‌های مطابق: ${matchedCfgs.length} مورد</div>
+      `;
+    }
+
+    function getConfigStatus(cfg) {
+      if (!cfg.active) return "disabled";
+      if (new Date(cfg.expiresAt) < new Date() || cfg.usedGB >= cfg.totalGB) return "expired";
+      return "active";
+    }
+
+    function refreshAllUI() {
+      renderDashboard();
+      renderConfigsTable();
+      renderSubscriptionsTable();
+      renderServersTable();
+      renderAdminsTable();
+      renderLogs();
+    }
+
+    function renderDashboard() {
+      const total = state.configs.length;
+      let active = 0, disabled = 0, expired = 0;
+      let totalGB = 0, usedGB = 0;
+
+      state.configs.forEach(c => {
+        const st = getConfigStatus(c);
+        if (st === "active") active++;
+        else if (st === "disabled") disabled++;
+        else expired++;
+        totalGB += Number(c.totalGB || 0);
+        usedGB += Number(c.usedGB || 0);
+      });
+
+      const remGB = Math.max(0, totalGB - usedGB);
+
+      const stats = [
+        { label: "کل کانفیگ‌ها", val: total, sub: "ثبت‌شده در VEXR" },
+        { label: "کانفیگ‌های فعال", val: active, sub: "آماده اتصال" },
+        { label: "غیرفعال / منقضی", val: `${disabled} / ${expired}`, sub: "نیازمند بررسی" },
+        { label: "مجموع حجم کل", val: `${totalGB.toLocaleString()} GB`, sub: `مصرف: ${usedGB.toFixed(1)} GB` },
+        { label: "حجم باقی‌مانده", val: `${remGB.toLocaleString()} GB`, sub: "ظرفیت آزاد کاربران" },
+        { label: "سرورها / ادمین‌ها", val: `${state.servers.length} / ${state.admins.length}`, sub: "زیرساخت فعال" }
+      ];
+
+      document.getElementById("dashboard-stats-grid").innerHTML = stats.map(s => `
+        <div class="stat-box">
+          <div class="stat-label">${s.label}</div>
+          <div class="stat-value">${s.val}</div>
+          <div class="stat-sub">${s.sub}</div>
+        </div>
+      `).join("");
+
+      document.getElementById("dash-servers-list").innerHTML = state.servers.map(s => {
+        const count = state.configs.filter(c => c.serverId === s.id).length;
+        return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px;">
+          <span>${s.name} (${s.country})</span>
+          <span class="badge-pill">${count} کانفیگ | ${s.active ? 'فعال' : 'غیرفعال'}</span>
+        </div>`;
+      }).join("");
+
+      document.getElementById("dash-recent-configs").innerHTML = state.configs.slice(0, 5).map(c => `
+        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px;">
+          <span>${c.name}</span>
+          <span style="color:var(--neon-blue);">${c.totalGB.toLocaleString()} GB</span>
+        </div>
+      `).join("");
+
+      document.getElementById("dash-recent-logs").innerHTML = state.logs.slice(0, 5).map(l => `
+        <div style="font-size:12.5px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-muted);">
+          <strong style="color:#fff;">[${l.time}] ${l.action}:</strong> ${l.detail}
+        </div>
+      `).join("") || "<p style='font-size:12px;color:var(--text-muted);'>فعالیتی ثبت نشده است.</p>";
+
+      renderCharts(totalGB, usedGB, remGB, active, disabled, expired);
+    }
+
+    function renderCharts(totalGB, usedGB, remGB, active, disabled, expired) {
+      const ctx1 = document.getElementById("trafficChart");
+      const ctx2 = document.getElementById("configsStatusChart");
+      if (!ctx1 || !ctx2) return;
+
+      if (charts.traffic) charts.traffic.destroy();
+      if (charts.status) charts.status.destroy();
+
+      charts.traffic = new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: ["حجم کل (GB)", "مصرف‌شده (GB)", "باقی‌مانده (GB)"],
+          datasets: [{ data: [totalGB, usedGB, remGB], backgroundColor: ["#6366f1", "#ec4899", "#38bdf8"], borderRadius: 8 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: "#94a3b8" } }, x: { ticks: { color: "#94a3b8" } } } }
+      });
+
+      charts.status = new Chart(ctx2, {
+        type: "doughnut",
+        data: {
+          labels: ["فعال", "غیرفعال", "منقضی‌شده"],
+          datasets: [{ data: [active, disabled, expired], backgroundColor: ["#10b981", "#64748b", "#ef4444"], borderWidth: 0 }]
+        },
+        options: { plugins: { legend: { labels: { color: "#e2e8f0" } } } }
+      });
+    }
+
+    function openCreateConfigModal() {
+      if (state.servers.length === 0) { showToast("ابتدا حداقل یک سرور اضافه کنید.", "error"); return; }
+      const srvOptions = state.servers.map(s => `<option value="${s.id}" ${s.isDefault ? 'selected' : ''}>${s.name} (${s.country})</option>`).join("");
+      openModal(`
+        <h3 style="margin-bottom:14px; color:var(--neon-blue);">✨ ساخت کانفیگ جدید VEXR</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px;">نام کاربر / کانفیگ</label>
+            <input type="text" id="new-cfg-name" class="input-dark" placeholder="مثلاً: Sobhan_VIP" />
+          </div>
+          <div>
+            <label style="font-size:12px;">انتخاب سرور</label>
+            <select id="new-cfg-server" class="select-dark">${srvOptions}</select>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label style="font-size:12px;">حجم کل (GB)</label>
+              <input type="number" id="new-cfg-gb" class="input-dark" value="${state.settings.defaultGB}" min="1" />
+            </div>
+            <div>
+              <label style="font-size:12px;">مدت اعتبار (روز)</label>
+              <input type="number" id="new-cfg-days" class="input-dark" value="${state.settings.defaultDays}" min="1" />
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn btn-primary" onclick="createConfig()">ساخت و ذخیره</button>
+            <button class="btn btn-danger" onclick="closeModal()">انصراف</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function createConfig() {
+      const name = document.getElementById("new-cfg-name").value.trim();
+      const serverId = document.getElementById("new-cfg-server").value;
+      const totalGB = parseFloat(document.getElementById("new-cfg-gb").value) || 30000;
+      const days = parseInt(document.getElementById("new-cfg-days").value) || 30;
+
+      if (!name) { showToast("نام کانفیگ را وارد کنید.", "error"); return; }
+
+      const nextHost = (state.configs.length % 250) + 18;
+      const clientIP = `${state.settings.subnet}${nextHost}`;
+      const now = new Date();
+      const exp = new Date(now.getTime() + days * 86400000);
+
+      const newCfg = {
+        id: "cfg_" + Date.now(),
+        name,
+        serverId,
+        clientIP,
+        privateKey: generateWGKey(),
+        publicKey: state.servers[0].publicKey,
+        totalGB,
+        usedGB: 0,
+        createdAt: now.toISOString(),
+        expiresAt: exp.toISOString(),
+        active: true,
+        createdBy: currentUser ? currentUser.username : "admin"
+      };
+
+      state.configs.unshift(newCfg);
+      addLog("ساخت کانفیگ", `کانفیگ ${name} با حجم ${totalGB.toLocaleString()}GB ساخته شد.`);
+      saveState();
+      closeModal();
+      refreshAllUI();
+      showToast("کانفیگ با موفقیت ساخته شد.", "success");
+    }
+
+    function renderConfigsTable() {
+      const countrySel = document.getElementById("cfg-filter-country");
+      const currentCountry = countrySel.value;
+      const countries = [...new Set(state.servers.map(s => s.country))];
+      countrySel.innerHTML = `<option value="all">همه کشورها</option>` + countries.map(c => `<option value="${c}">${c}</option>`).join("");
+      countrySel.value = countries.includes(currentCountry) ? currentCountry : "all";
+
+      const search = document.getElementById("cfg-search").value.trim().toLowerCase();
+      const statusFilter = document.getElementById("cfg-filter-status").value;
+      const sortMode = document.getElementById("cfg-sort").value;
+
+      let list = state.configs.filter(c => {
+        const srv = state.servers.find(s => s.id === c.serverId);
+        const st = getConfigStatus(c);
+        if (search && !c.name.toLowerCase().includes(search) && !c.clientIP.includes(search)) return false;
+        if (countrySel.value !== "all" && (!srv || srv.country !== countrySel.value)) return false;
+        if (statusFilter !== "all" && st !== statusFilter) return false;
+        return true;
+      });
+
+      list.sort((a, b) => {
+        if (sortMode === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortMode === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortMode === "volume_desc") return b.totalGB - a.totalGB;
+        if (sortMode === "remaining_desc") return new Date(b.expiresAt) - new Date(a.expiresAt);
+        return 0;
+      });
+
+      const tbody = document.getElementById("configs-table-body");
+      tbody.innerHTML = list.map(c => {
+        const srv = state.servers.find(s => s.id === c.serverId);
+        const st = getConfigStatus(c);
+        const stLabel = st === "active" ? "فعال" : (st === "disabled" ? "غیرفعال" : "منقضی");
+        const stClass = st === "active" ? "status-active" : (st === "disabled" ? "status-disabled" : "status-expired");
+        const remGB = Math.max(0, c.totalGB - c.usedGB).toLocaleString();
+
+        return `
+          <tr>
+            <td><input type="checkbox" class="cfg-row-check" value="${c.id}" /></td>
+            <td><strong>${c.name}</strong><br/><span style="font-size:11px; color:var(--text-muted); direction:ltr;">${c.clientIP}</span></td>
+            <td>${srv ? `${srv.name}<br><small style="color:var(--neon-blue);">${srv.country}</small>` : 'نامشخص'}</td>
+            <td>کل: <strong>${c.totalGB.toLocaleString()} GB</strong><br/><small style="color:#34d399;">باقی: ${remGB} GB</small></td>
+            <td><small>ساخت: ${new Date(c.createdAt).toLocaleDateString('fa-IR')}</small><br/><small style="color:#fbbf24;">انقضا: ${new Date(c.expiresAt).toLocaleDateString('fa-IR')}</small></td>
+            <td><span class="status-badge ${stClass}">${stLabel}</span></td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                <button class="btn btn-neon btn-sm" onclick="openConfigDetails('${c.id}')">QR / جزئیات</button>
+                <button class="btn btn-primary btn-sm" onclick="downloadConfFile('${c.name}.conf', \`${buildConfText(c).replace(/`/g, '\\`')}\`)">📥 دانلود .CONF</button>
+                <button class="btn btn-sm" style="background:#334155;color:#fff;" onclick="openEditConfigModal('${c.id}')">ویرایش</button>
+                <button class="btn btn-sm ${c.active ? 'btn-danger' : 'btn-success'}" onclick="toggleConfigActive('${c.id}')">${c.active ? 'قطع' : 'وصل'}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteConfig('${c.id}')">حذف</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">هیچ کانفیگی یافت نشد.</td></tr>`;
+    }
+
+    function openConfigDetails(id) {
+      const cfg = state.configs.find(c => c.id === id);
+      if (!cfg) return;
+      const confText = buildConfText(cfg);
+      openModal(`
+        <h3 style="margin-bottom:12px; color:var(--neon-blue);">🔐 جزئیات کانفیگ: ${cfg.name}</h3>
+        <div id="qr-holder" style="background:#fff; padding:12px; border-radius:14px; width:fit-content; margin:0 auto 14px;"></div>
+        <textarea class="textarea-dark" rows="8" readonly style="direction:ltr; font-family:monospace; font-size:12px;">${confText}</textarea>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;">
+          <button class="btn btn-primary" onclick="navigator.clipboard.writeText(\`${confText.replace(/`/g, '\\`')}\`); showToast('کپی شد', 'success')">📋 کپی کانفیگ</button>
+          <button class="btn btn-neon" onclick="downloadConfFile('${cfg.name}.conf', \`${confText.replace(/`/g, '\\`')}\`)">📥 دانلود فایل .CONF</button>
+          <button class="btn btn-danger" onclick="closeModal()">بستن</button>
+        </div>
+      `);
+      new QRCode(document.getElementById("qr-holder"), { text: confText, width: 190, height: 190 });
+    }
+
+    function openEditConfigModal(id) {
+      const cfg = state.configs.find(c => c.id === id);
+      if (!cfg) return;
+      openModal(`
+        <h3 style="margin-bottom:14px;">✏️ ویرایش و تمدید کانفیگ</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div><label style="font-size:12px;">نام کانفیگ</label><input type="text" id="edit-cfg-name" class="input-dark" value="${cfg.name}" /></div>
+          <div class="grid-2">
+            <div><label style="font-size:12px;">حجم کل (GB)</label><input type="number" id="edit-cfg-total" class="input-dark" value="${cfg.totalGB}" /></div>
+            <div><label style="font-size:12px;">حجم مصرف‌شده (GB)</label><input type="number" id="edit-cfg-used" class="input-dark" value="${cfg.usedGB}" /></div>
+          </div>
+          <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="saveEditConfig('${cfg.id}')">ذخیره تغییرات</button><button class="btn btn-danger" onclick="closeModal()">انصراف</button></div>
+        </div>
+      `);
+    }
+
+    function saveEditConfig(id) {
+      const cfg = state.configs.find(c => c.id === id);
+      if (!cfg) return;
+      cfg.name = document.getElementById("edit-cfg-name").value.trim() || cfg.name;
+      cfg.totalGB = parseFloat(document.getElementById("edit-cfg-total").value) || cfg.totalGB;
+      cfg.usedGB = parseFloat(document.getElementById("edit-cfg-used").value) || 0;
+      saveState(); closeModal(); refreshAllUI(); showToast("تغییرات ذخیره شد.", "success");
+    }
+
+    function toggleConfigActive(id) {
+      const cfg = state.configs.find(c => c.id === id);
+      if (!cfg) return;
+      cfg.active = !cfg.active;
+      saveState(); refreshAllUI();
+    }
+
+    function deleteConfig(id) {
+      if (!confirm("آیا از حذف دائمی این کانفیگ مطمئن هستید؟")) return;
+      state.configs = state.configs.filter(c => c.id !== id);
+      saveState(); refreshAllUI(); showToast("کانفیگ حذف شد.", "success");
+    }
+
+    function toggleSelectAllConfigs(master) {
+      document.querySelectorAll(".cfg-row-check").forEach(cb => cb.checked = master.checked);
+    }
+
+    function bulkAction(type) {
+      const ids = Array.from(document.querySelectorAll(".cfg-row-check:checked")).map(cb => cb.value);
+      if (ids.length === 0) { showToast("هیچ کانفیگی انتخاب نشده است.", "error"); return; }
+      if (type === "delete") {
+        if (!confirm(`آیا ${ids.length} کانفیگ انتخاب‌شده حذف شوند؟`)) return;
+        state.configs = state.configs.filter(c => !ids.includes(c.id));
+      } else if (type === "activate") {
+        state.configs.forEach(c => { if (ids.includes(c.id)) c.active = true; });
+      }
+      saveState(); refreshAllUI(); showToast("عملیات گروهی انجام شد.", "success");
+    }
+
+    function exportConfigsCSV() {
+      let csv = "ID,Name,ClientIP,TotalGB,UsedGB,Status,CreatedAt\n";
+      state.configs.forEach(c => {
+        csv += `"${c.id}","${c.name}","${c.clientIP}",${c.totalGB},${c.usedGB},"${getConfigStatus(c)}","${c.createdAt}"\n`;
+      });
+      downloadCSVFile("VEXR_Configs_Export.csv", csv);
+      showToast("خروجی CSV دانلود شد.", "success");
+    }
+
+    function toggleSubUserSelector() {
+      const mode = document.getElementById("sub-mode").value;
+      document.getElementById("sub-single-user-box").style.display = mode === "single" ? "block" : "none";
+      document.getElementById("sub-multi-user-box").style.display = mode === "selected" ? "block" : "none";
+    }
+
+    async function createSubscriptionLink() {
+      const title = document.getElementById("sub-title").value.trim() || "اشتراک VEXR VIP";
+      const mode = document.getElementById("sub-mode").value;
+      const days = parseInt(document.getElementById("sub-days").value) || 30;
+      const rawPass = document.getElementById("sub-password").value;
+
+      let selectedIds = [];
+      if (mode === "single") {
+        const id = document.getElementById("sub-single-user").value;
+        if (id) selectedIds = [id];
+      } else if (mode === "selected") {
+        selectedIds = Array.from(document.getElementById("sub-multi-users").selectedOptions).map(o => o.value);
+      } else {
+        selectedIds = state.configs.filter(c => getConfigStatus(c) === "active").map(c => c.id);
+      }
+
+      if (selectedIds.length === 0) { showToast("حداقل یک کانفیگ انتخاب کنید.", "error"); return; }
+
+      const pwdHash = rawPass ? await sha256Hex(rawPass) : null;
+      const now = new Date();
+      const exp = new Date(now.getTime() + days * 86400000).toISOString();
+
+      const newSub = {
+        id: "sub_" + Date.now(),
+        title,
+        configIds: selectedIds,
+        hasPassword: Boolean(pwdHash),
+        pwdHash,
+        createdAt: now.toISOString(),
+        expiresAt: exp,
+        active: true
+      };
+
+      state.subscriptions.unshift(newSub);
+      saveState(); renderSubscriptionsTable(); showToast("لینک ساب VEXR ساخته شد.", "success");
+    }
+
+    function buildFullSubURL(sub) {
+      const items = sub.configIds.map(id => {
+        const c = state.configs.find(x => x.id === id);
+        if (!c) return null;
+        const srv = state.servers.find(s => s.id === c.serverId);
+        return {
+          name: c.name,
+          country: srv ? srv.country : "ترکیه 🇹🇷",
+          totalGB: c.totalGB,
+          conf: buildConfText(c)
+        };
+      }).filter(Boolean);
+
+      const payload = {
+        brand: BRAND_NAME,
+        title: sub.title,
+        exp: sub.expiresAt,
+        pwdHash: sub.pwdHash,
+        items
+      };
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}?sub=${encodeURIComponent(encodeUTF8Base64(JSON.stringify(payload)))}`;
+    }
+
+    function renderSubscriptionsTable() {
+      const opts = state.configs.map(c => `<option value="${c.id}">${c.name} (${c.totalGB.toLocaleString()} GB)</option>`).join("");
+      document.getElementById("sub-single-user").innerHTML = opts;
+      document.getElementById("sub-multi-users").innerHTML = opts;
+
+      const tbody = document.getElementById("subs-table-body");
+      tbody.innerHTML = state.subscriptions.map(sub => {
+        const isExpired = new Date(sub.expiresAt) < new Date();
+        return `
+          <tr>
+            <td><strong>${sub.title}</strong></td>
+            <td>${sub.configIds.length} کانفیگ</td>
+            <td>${sub.hasPassword ? '<span class="status-badge status-active">🔒 رمزدار</span>' : '<span class="status-badge status-disabled">بدون رمز</span>'}</td>
+            <td><small>ساخت: ${new Date(sub.createdAt).toLocaleDateString('fa-IR')}</small><br/><small style="color:#fbbf24;">انقضا: ${new Date(sub.expiresAt).toLocaleDateString('fa-IR')}</small></td>
+            <td><span class="status-badge ${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'منقضی' : 'فعال'}</span></td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText('${buildFullSubURL(sub)}'); showToast('لینک اشتراک کپی شد', 'success')">📋 کپی لینک</button>
+                <button class="btn btn-neon btn-sm" onclick="openSubQRModal('${sub.id}')">📱 QR ساب</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteSub('${sub.id}')">حذف</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">لینک اشتراکی ساخته نشده است.</td></tr>`;
+    }
+
+    function openSubQRModal(subId) {
+      const sub = state.subscriptions.find(s => s.id === subId);
+      if (!sub) return;
+      const url = buildFullSubURL(sub);
+      openModal(`
+        <h3 style="margin-bottom:12px; color:var(--neon-blue);">📱 QR کد لینک اشتراک: ${sub.title}</h3>
+        <div id="sub-qr-box" style="background:#fff; padding:14px; border-radius:14px; width:fit-content; margin:0 auto 14px;"></div>
+        <input type="text" class="input-dark" value="${url}" readonly style="direction:ltr; text-align:left; font-size:12px; margin-bottom:14px;" />
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${url}'); showToast('کپی شد', 'success')">کپی لینک</button>
+          <button class="btn btn-danger" onclick="closeModal()">بستن</button>
+        </div>
+      `);
+      new QRCode(document.getElementById("sub-qr-box"), { text: url, width: 200, height: 200 });
+    }
+
+    function deleteSub(id) {
+      state.subscriptions = state.subscriptions.filter(s => s.id !== id);
+      saveState(); renderSubscriptionsTable(); showToast("لینک ساب حذف شد", "success");
+    }
+
+    function openServerModal(editId = null) {
+      const srv = editId ? state.servers.find(s => s.id === editId) : null;
+      openModal(`
+        <h3 style="margin-bottom:14px;">${srv ? '✏️ ویرایش سرور' : '🌐 افزودن سرور جدید'}</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <input type="text" id="srv-name" class="input-dark" placeholder="نام سرور" value="${srv ? srv.name : ''}" />
+          <div class="grid-2">
+            <input type="text" id="srv-country" class="input-dark" placeholder="کشور (ترکیه 🇹🇷)" value="${srv ? srv.country : ''}" />
+            <input type="text" id="srv-cat" class="input-dark" placeholder="دسته‌بندی" value="${srv ? srv.category : 'گیم و وبگردی'}" />
+          </div>
+          <div class="grid-2">
+            <input type="text" id="srv-ip" class="input-dark" placeholder="آدرس دامنه یا IP" value="${srv ? srv.ip : ''}" style="direction:ltr;" />
+            <input type="number" id="srv-port" class="input-dark" placeholder="پورت" value="${srv ? srv.port : 7331}" />
+          </div>
+          <input type="text" id="srv-pubkey" class="input-dark" placeholder="PublicKey" value="${srv ? srv.publicKey : ''}" style="direction:ltr;" />
+          <input type="number" id="srv-cap" class="input-dark" placeholder="ظرفیت (GB)" value="${srv ? srv.capacityGB : 30000}" />
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn btn-primary" onclick="saveServer('${editId || ''}')">ذخیره سرور</button>
+            <button class="btn btn-danger" onclick="closeModal()">انصراف</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function saveServer(editId) {
+      const data = {
+        name: document.getElementById("srv-name").value.trim(),
+        country: document.getElementById("srv-country").value.trim() || "ترکیه 🇹🇷",
+        category: document.getElementById("srv-cat").value.trim() || "گیمینگ",
+        ip: document.getElementById("srv-ip").value.trim(),
+        port: parseInt(document.getElementById("srv-port").value) || 7331,
+        publicKey: document.getElementById("srv-pubkey").value.trim(),
+        capacityGB: parseInt(document.getElementById("srv-cap").value) || 30000
+      };
+      if (!data.name || !data.ip || !data.publicKey) { showToast("اطلاعات سرور کامل نیست.", "error"); return; }
+      if (editId) {
+        const idx = state.servers.findIndex(s => s.id === editId);
+        if (idx > -1) state.servers[idx] = { ...state.servers[idx], ...data };
+      } else {
+        state.servers.push({ id: "srv_" + Date.now(), ...data, active: true, isDefault: false });
+      }
+      saveState(); closeModal(); refreshAllUI(); showToast("سرور ذخیره شد.", "success");
+    }
+
+    function renderServersTable() {
+      const tbody = document.getElementById("servers-table-body");
+      tbody.innerHTML = state.servers.map(s => {
+        const count = state.configs.filter(c => c.serverId === s.id).length;
+        return `
+          <tr>
+            <td><strong>${s.name}</strong><br><small style="color:var(--neon-blue);">${s.category}</small></td>
+            <td>${s.country}</td>
+            <td style="direction:ltr; text-align:right;">${s.ip}:${s.port}</td>
+            <td>${s.capacityGB.toLocaleString()} GB / ${count} کانفیگ</td>
+            <td>${s.isDefault ? '⭐ پیش‌فرض' : `<button class="btn btn-sm btn-neon" onclick="setDefaultServer('${s.id}')">انتخاب</button>`}</td>
+            <td><span class="status-badge status-active">فعال</span></td>
+            <td><button class="btn btn-sm btn-neon" onclick="openServerModal('${s.id}')">ویرایش</button></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function setDefaultServer(id) {
+      state.servers.forEach(s => s.isDefault = (s.id === id));
+      saveState(); renderServersTable();
+    }
+
+    function openAdminModal() {
+      openModal(`
+        <h3 style="margin-bottom:14px;">🛡️ افزودن ادمین جدید</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <input type="text" id="adm-name" class="input-dark" placeholder="نام نمایشی ادمین" />
+          <input type="text" id="adm-user" class="input-dark" placeholder="نام کاربری" style="direction:ltr;" />
+          <input type="password" id="adm-pass" class="input-dark" placeholder="رمز عبور" style="direction:ltr;" />
+          <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="createAdmin()">ثبت ادمین</button><button class="btn btn-danger" onclick="closeModal()">انصراف</button></div>
+        </div>
+      `);
+    }
+
+    function createAdmin() {
+      const name = document.getElementById("adm-name").value.trim();
+      const username = document.getElementById("adm-user").value.trim();
+      const password = document.getElementById("adm-pass").value;
+      if (!name || !username || !password) return showToast("همه فیلدها الزامی است.", "error");
+
+      state.admins.push({
+        id: "adm_" + Date.now(), name, username, password, role: "admin", active: true,
+        expiresAt: new Date(Date.now() + 30*86400000).toISOString()
+      });
+      saveState(); closeModal(); renderAdminsTable(); showToast("ادمین اضافه شد.", "success");
+    }
+
+    function renderAdminsTable() {
+      const tbody = document.getElementById("admins-table-body");
+      tbody.innerHTML = state.admins.map(a => `
+        <tr>
+          <td><strong>${a.name}</strong></td>
+          <td style="direction:ltr; text-align:right;">${a.username}</td>
+          <td>${a.role === 'owner' ? '👑 مالک اصلی' : 'ادمین'}</td>
+          <td>${state.configs.filter(c => c.createdBy === a.username).length} کانفیگ</td>
+          <td>${a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('fa-IR') : 'نامحدود'}</td>
+          <td><span class="status-badge status-active">فعال</span></td>
+          <td>${a.role === 'owner' ? '-' : `<button class="btn btn-sm btn-danger" onclick="deleteAdmin('${a.id}')">حذف</button>`}</td>
+        </tr>
+      `).join("");
+    }
+
+    function deleteAdmin(id) {
+      state.admins = state.admins.filter(a => a.id !== id || a.role === 'owner');
+      saveState(); renderAdminsTable();
+    }
+
+    function loadSettingsInputs() {
+      document.getElementById("set-dns").value = state.settings.dns;
+      document.getElementById("set-mtu").value = state.settings.mtu;
+      document.getElementById("set-def-gb").value = state.settings.defaultGB;
+      document.getElementById("set-def-days").value = state.settings.defaultDays;
+      document.getElementById("set-subnet").value = state.settings.subnet;
+      document.getElementById("set-allowed-ips").value = state.settings.allowedIPs;
+    }
+
+    function saveSettings() {
+      state.settings.dns = document.getElementById("set-dns").value.trim();
+      state.settings.mtu = parseInt(document.getElementById("set-mtu").value) || 1300;
+      state.settings.defaultGB = parseInt(document.getElementById("set-def-gb").value) || 30000;
+      state.settings.defaultDays = parseInt(document.getElementById("set-def-days").value) || 30;
+      state.settings.subnet = document.getElementById("set-subnet").value.trim();
+      state.settings.allowedIPs = document.getElementById("set-allowed-ips").value.trim();
+      saveState(); showToast("تنظیمات ذخیره شد.", "success");
+    }
+
+    function renderLogs() {
+      document.getElementById("full-logs-list").innerHTML = state.logs.map(l => `
+        <div style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px;">
+          <span style="color:var(--neon-blue);">[${l.time}]</span>
+          <strong>${l.actor}</strong> — <span style="color:#c084fc;">${l.action}:</span> ${l.detail}
+        </div>
+      `).join("") || "<p style='color:var(--text-muted);'>تاریخچه‌ای ثبت نشده است.</p>";
+    }
+
+    function clearLogs() { state.logs = []; saveState(); renderLogs(); }
+
+    function exportBackupJSON() {
+      downloadJSONFile(`VEXR_Backup_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(state, null, 2));
+      showToast("فایل پشتیبان JSON دانلود شد.", "success");
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported.configs) throw new Error();
+          state = { ...defaultState, ...imported };
+          saveState(); refreshAllUI(); showToast("بازیابی پشتیبان انجام شد.", "success");
+        } catch (err) { showToast("فایل نامعتبر است.", "error"); }
+      };
+      reader.readAsText(file);
+    }
+
+    function openModal(html) {
+      document.getElementById("modal-content-box").innerHTML = html;
+      document.getElementById("universal-modal").style.display = "flex";
+    }
+    function closeModal() { document.getElementById("modal-content-box").innerHTML = ""; document.getElementById("universal-modal").style.display = "none"; }
+  </script>
+</body>
+</html>
